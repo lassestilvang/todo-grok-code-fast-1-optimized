@@ -24,6 +24,7 @@ interface TaskFormProps {
   labels: Label[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  existingTasks?: any[]; // For smart suggestions
 }
 
 export default function TaskForm({ task, lists = [], labels = [], onSubmit, onCancel }: TaskFormProps) {
