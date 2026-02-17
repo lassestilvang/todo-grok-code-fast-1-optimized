@@ -22,10 +22,11 @@ const updateTaskSchema = z.object({
 // GET /api/tasks/[id] - Get a specific task
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = parseInt(params.id);
+    const { id } = await params;
+    const taskId = parseInt(id);
 
     if (isNaN(taskId)) {
       return NextResponse.json(
@@ -60,10 +61,11 @@ export async function GET(
 // PUT /api/tasks/[id] - Update a task
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = parseInt(params.id);
+    const { id } = await params;
+    const taskId = parseInt(id);
 
     if (isNaN(taskId)) {
       return NextResponse.json(
@@ -133,10 +135,11 @@ export async function PUT(
 // DELETE /api/tasks/[id] - Delete a task
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = parseInt(params.id);
+    const { id } = await params;
+    const taskId = parseInt(id);
 
     if (isNaN(taskId)) {
       return NextResponse.json(
