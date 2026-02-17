@@ -20,10 +20,11 @@ const updateSubtaskSchema = z.object({
 // GET /api/tasks/[id]/subtasks - Get subtasks for a task
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = parseInt(params.id);
+    const { id } = await params;
+    const taskId = parseInt(id);
 
     if (isNaN(taskId)) {
       return NextResponse.json(
@@ -51,10 +52,11 @@ export async function GET(
 // POST /api/tasks/[id]/subtasks - Create a new subtask
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const taskId = parseInt(params.id);
+    const { id } = await params;
+    const taskId = parseInt(id);
 
     if (isNaN(taskId)) {
       return NextResponse.json(

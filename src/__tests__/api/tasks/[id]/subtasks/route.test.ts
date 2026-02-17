@@ -4,6 +4,15 @@ import { GET, POST } from '@/app/api/tasks/[id]/subtasks/route';
 // Mock drizzle-orm functions
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((field, value) => ({ field, value })),
+  relations: vi.fn((table, callback) => ({ table, relations: callback })),
+}));
+
+// Mock the database
+vi.mock('@/lib/db', () => ({
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+  },
 }));
 
 describe('/api/tasks/[id]/subtasks', () => {
@@ -96,7 +105,6 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
       db.insert = mockInsert;
 
       const request = mockRequest('POST');

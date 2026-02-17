@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereConditions = [];
+    const whereConditions = [];
 
     if (status) {
       whereConditions.push(eq(tasks.status, status));

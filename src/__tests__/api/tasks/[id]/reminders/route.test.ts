@@ -13,6 +13,7 @@ vi.mock('@/lib/db', () => ({
 // Mock drizzle-orm functions
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((field, value) => ({ field, value })),
+  relations: vi.fn((table, callback) => ({ table, relations: callback })),
 }));
 
 describe('/api/tasks/[id]/reminders', () => {

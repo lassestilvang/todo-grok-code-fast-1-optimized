@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/tasks/route';
+import { NextRequest } from 'next/server';
 
 // Mock NextResponse
 vi.mock('next/server', () => ({
@@ -11,6 +12,14 @@ vi.mock('next/server', () => ({
   },
 }));
 
+// Mock the database
+vi.mock('@/lib/db', () => ({
+  db: {
+    select: vi.fn(),
+    insert: vi.fn(),
+  },
+}));
+
 // Mock drizzle-orm functions
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((field, value) => ({ field, value })),
@@ -18,20 +27,17 @@ vi.mock('drizzle-orm', () => ({
   or: vi.fn((...conditions) => ({ conditions })),
   like: vi.fn((field, pattern) => ({ field, pattern })),
   desc: vi.fn((field) => ({ field, direction: 'desc' })),
+  asc: vi.fn((field) => ({ field, direction: 'asc' })),
   orderBy: vi.fn((...fields) => ({ fields })),
+  relations: vi.fn((table, callback) => ({ table, relations: callback })),
 }));
 
 describe('/api/tasks', () => {
-  const mockRequest = (url: string, method = 'GET') => ({
+  const mockRequest = (url: string, method = 'GET'): NextRequest => ({
     url,
     method,
     json: vi.fn(),
-  });
-
-  const mockResponse = () => ({
-    json: vi.fn(),
-    status: vi.fn(),
-  });
+  } as NextRequest);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -81,11 +87,10 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?status=pending');
-      const response = await GET(request as any);
+      const response = await GET(request);
 
       expect(response.json).toHaveBeenCalledWith(mockTasks);
     });
@@ -105,7 +110,6 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?listId=1');
@@ -133,7 +137,7 @@ describe('/api/tasks', () => {
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?search=Search');
-      const response = await GET(request as any);
+      const response = await GET(request);
 
       expect(response.json()).toBe(mockTasks);
     });
@@ -151,7 +155,6 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
@@ -177,13 +180,12 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
       db.insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(taskData);
 
-      const response = await POST(request as any);
+      const response = await POST(request);
 
       expect(mockInsert).toHaveBeenCalled();
       expect(response.status).toBe(201);
@@ -196,7 +198,7 @@ describe('/api/tasks', () => {
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(invalidData);
 
-      const response = await POST(request as any);
+      const response = await POST(request);
 
       expect(response.status).toBe(400);
       expect(response.json()).toEqual({
