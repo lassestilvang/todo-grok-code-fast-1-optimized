@@ -1,14 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/tasks/[id]/subtasks/route';
-import { db } from '@/lib/db';
-
-// Mock the database
-vi.mock('@/lib/db', () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-  },
-}));
 
 // Mock drizzle-orm functions
 vi.mock('drizzle-orm', () => ({
@@ -41,25 +32,28 @@ describe('/api/tasks/[id]/subtasks', () => {
 
       const mockSelect = vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue(mockSubtasks),
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue(mockSubtasks),
+          }),
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
 
       expect(mockSelect).toHaveBeenCalled();
-      expect(response.json).toHaveBeenCalledWith(mockSubtasks);
+      expect(response.json()).toEqual(mockSubtasks);
     });
 
     it('should return 400 for invalid task id', async () => {
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: { id: 'invalid' } });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Invalid task ID' });
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({ error: 'Invalid task ID' });
     });
 
     it('should handle database errors', async () => {
@@ -74,8 +68,8 @@ describe('/api/tasks/[id]/subtasks', () => {
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
 
-      expect(response.status).toHaveBeenCalledWith(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to fetch subtasks' });
+      expect(response.status).toBe(500);
+      expect(response.json()).toEqual({ error: 'Failed to fetch subtasks' });
     });
   });
 
@@ -102,6 +96,7 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.insert = mockInsert;
 
       const request = mockRequest('POST');
@@ -110,8 +105,8 @@ describe('/api/tasks/[id]/subtasks', () => {
       const response = await POST(request as any, { params: mockParams });
 
       expect(mockInsert).toHaveBeenCalled();
-      expect(response.status).toHaveBeenCalledWith(201);
-      expect(response.json).toHaveBeenCalledWith(mockSubtask);
+      expect(response.status).toBe(201);
+      expect(response.json()).toEqual(mockSubtask);
     });
 
     it('should return 400 for invalid task id', async () => {
@@ -122,8 +117,8 @@ describe('/api/tasks/[id]/subtasks', () => {
 
       const response = await POST(request as any, { params: { id: 'invalid' } });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Invalid task ID' });
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({ error: 'Invalid task ID' });
     });
 
     it('should validate required fields', async () => {
@@ -134,8 +129,8 @@ describe('/api/tasks/[id]/subtasks', () => {
 
       const response = await POST(request as any, { params: mockParams });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({
         error: 'Validation failed',
         details: expect.any(Array),
       });
@@ -157,8 +152,8 @@ describe('/api/tasks/[id]/subtasks', () => {
 
       const response = await POST(request as any, { params: mockParams });
 
-      expect(response.status).toHaveBeenCalledWith(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to create subtask' });
+      expect(response.status).toBe(500);
+      expect(response.json()).toEqual({ error: 'Failed to create subtask' });
     });
   });
 });

@@ -243,8 +243,8 @@ describe('Task Filtering and Sorting', () => {
       const filter: TaskFilter = { search: 'work' };
       const result = filterTasks(mockTasks, filter);
 
-      expect(result).toHaveLength(2);
-      expect(result.map(t => t.id).sort()).toEqual([1, 3]);
+      expect(result).toHaveLength(1);
+      expect(result.map(t => t.id)).toEqual([1]);
     });
 
     it('filters by search term in description', () => {

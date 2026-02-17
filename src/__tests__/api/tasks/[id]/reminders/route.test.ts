@@ -51,7 +51,7 @@ describe('/api/tasks/[id]/reminders', () => {
       const response = await GET(request as any, { params: mockParams });
 
       expect(mockSelect).toHaveBeenCalled();
-      expect(response.json).toHaveBeenCalledWith(mockReminders);
+      expect(response.json()).toEqual(mockReminders);
       expect(response.status).toBe(200);
     });
 
@@ -59,8 +59,8 @@ describe('/api/tasks/[id]/reminders', () => {
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: { id: 'invalid' } });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Invalid task ID' });
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({ error: 'Invalid task ID' });
     });
 
     it('should handle database errors', async () => {
@@ -76,7 +76,7 @@ describe('/api/tasks/[id]/reminders', () => {
       const response = await GET(request as any, { params: mockParams });
 
       expect(response.status).toBe(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to fetch reminders' });
+      expect(response.json()).toEqual({ error: 'Failed to fetch reminders' });
     });
   });
 
@@ -109,8 +109,8 @@ describe('/api/tasks/[id]/reminders', () => {
       const response = await POST(request as any, { params: mockParams });
 
       expect(mockInsert).toHaveBeenCalled();
-      expect(response.status).toHaveBeenCalledWith(201);
-      expect(response.json).toHaveBeenCalledWith(mockReminder);
+      expect(response.status).toBe(201);
+      expect(response.json()).toEqual(mockReminder);
     });
 
     it('should return 400 for invalid task id', async () => {
@@ -121,8 +121,8 @@ describe('/api/tasks/[id]/reminders', () => {
 
       const response = await POST(request as any, { params: { id: 'invalid' } });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Invalid task ID' });
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({ error: 'Invalid task ID' });
     });
 
     it('should validate required fields', async () => {
@@ -133,8 +133,8 @@ describe('/api/tasks/[id]/reminders', () => {
 
       const response = await POST(request as any, { params: mockParams });
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({
         error: 'Validation failed',
         details: expect.any(Array),
       });
@@ -156,8 +156,8 @@ describe('/api/tasks/[id]/reminders', () => {
 
       const response = await POST(request as any, { params: mockParams });
 
-      expect(response.status).toHaveBeenCalledWith(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to create reminder' });
+      expect(response.status).toBe(500);
+      expect(response.json()).toEqual({ error: 'Failed to create reminder' });
     });
   });
 });

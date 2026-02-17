@@ -1,16 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GET, POST } from '@/app/api/tasks/route';
-import { db } from '@/lib/db';
-
-// Mock the database
-vi.mock('@/lib/db', () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-}));
 
 // Mock NextResponse
 vi.mock('next/server', () => ({
@@ -29,6 +18,7 @@ vi.mock('drizzle-orm', () => ({
   or: vi.fn((...conditions) => ({ conditions })),
   like: vi.fn((field, pattern) => ({ field, pattern })),
   desc: vi.fn((field) => ({ field, direction: 'desc' })),
+  orderBy: vi.fn((...fields) => ({ fields })),
 }));
 
 describe('/api/tasks', () => {
@@ -39,8 +29,8 @@ describe('/api/tasks', () => {
   });
 
   const mockResponse = () => ({
-    json: vi.fn().mockReturnThis(),
-    status: vi.fn().mockReturnThis(),
+    json: vi.fn(),
+    status: vi.fn(),
   });
 
   beforeEach(() => {
@@ -66,6 +56,7 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
@@ -90,6 +81,7 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?status=pending');
@@ -113,12 +105,13 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?listId=1');
       const response = await GET(request as any);
 
-      expect(response.json).toHaveBeenCalledWith(mockTasks);
+      expect(response.json()).toBe(mockTasks);
       expect(response.status).toBe(200);
     });
 
@@ -142,7 +135,7 @@ describe('/api/tasks', () => {
       const request = mockRequest('http://localhost:3000/api/tasks?search=Search');
       const response = await GET(request as any);
 
-      expect(response.json).toHaveBeenCalledWith(mockTasks);
+      expect(response.json()).toBe(mockTasks);
     });
 
     it('should handle database errors', async () => {
@@ -158,13 +151,14 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
       const response = await GET(request as any);
 
       expect(response.status).toBe(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to fetch tasks' });
+      expect(response.json()).toBe({ error: 'Failed to fetch tasks' });
     });
   });
 
@@ -183,6 +177,7 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
@@ -203,8 +198,8 @@ describe('/api/tasks', () => {
 
       const response = await POST(request as any);
 
-      expect(response.status).toHaveBeenCalledWith(400);
-      expect(response.json).toHaveBeenCalledWith({
+      expect(response.status).toBe(400);
+      expect(response.json()).toEqual({
         error: 'Validation failed',
         details: expect.any(Array),
       });
@@ -219,6 +214,7 @@ describe('/api/tasks', () => {
         }),
       });
 
+      const { db } = await import('@/lib/db');
       db.insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
@@ -227,7 +223,7 @@ describe('/api/tasks', () => {
       const response = await POST(request as any);
 
       expect(response.status).toBe(500);
-      expect(response.json).toHaveBeenCalledWith({ error: 'Failed to create task' });
+      expect(response.json()).toEqual({ error: 'Failed to create task' });
     });
   });
 });
