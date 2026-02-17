@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/tasks/[id]/reminders/route';
 import { db } from '@/lib/db';
 
@@ -20,12 +21,7 @@ describe('/api/tasks/[id]/reminders', () => {
   const mockRequest = (method = 'GET') => ({
     method,
     json: vi.fn(),
-  });
-
-  const mockResponse = () => ({
-    json: vi.fn().mockReturnThis(),
-    status: vi.fn().mockReturnThis(),
-  });
+  } as NextRequest);
 
   const mockParams = { id: '1' };
 
