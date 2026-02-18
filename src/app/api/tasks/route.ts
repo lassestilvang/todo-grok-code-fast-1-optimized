@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const taskList = await db
+    const taskList = await getDb()
       .select()
       .from(tasks)
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
