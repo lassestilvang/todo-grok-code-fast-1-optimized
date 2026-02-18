@@ -33,6 +33,8 @@ export type Task = {
   recurringEndDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+  labels?: Label[];
+  list?: List;
 };
 
 export type TaskLabel = {
