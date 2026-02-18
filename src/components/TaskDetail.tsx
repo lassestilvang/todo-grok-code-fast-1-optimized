@@ -76,15 +76,6 @@ export default function TaskDetail({
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 0: return 'bg-gray-100 text-gray-800';
-      case 1: return 'bg-yellow-100 text-yellow-800';
-      case 2: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString();

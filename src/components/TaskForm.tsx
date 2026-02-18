@@ -59,7 +59,6 @@ export default function TaskForm({ task, lists = [], labels = [], onSubmit, onCa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (task) {
       setFormData({
