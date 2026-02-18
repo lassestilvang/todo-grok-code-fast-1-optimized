@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { subtasks, changeLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -64,7 +64,7 @@ export async function POST(
 
     const now = new Date();
 
-    const newSubtask = await db.insert(subtasks).values({
+    const newSubtask = await getDb().insert(subtasks).values({
       ...validatedData,
       taskId,
       createdAt: now,
@@ -72,7 +72,7 @@ export async function POST(
     }).returning();
 
     // Log the change
-    await db.insert(changeLogs).values({
+    await getDb().insert(changeLogs).values({
       entityType: 'subtask',
       entityId: newSubtask[0].id,
       action: 'create',
@@ -84,7 +84,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

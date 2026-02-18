@@ -106,7 +106,7 @@ export async function PUT(
       .returning();
 
     // Log the change
-    await db.insert(changeLogs).values({
+    await getDb().insert(changeLogs).values({
       entityType: 'task',
       entityId: taskId,
       action: 'update',
@@ -119,7 +119,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -165,7 +165,7 @@ export async function DELETE(
     await getDb().delete(tasks).where(eq(tasks.id, taskId));
 
     // Log the change
-    await db.insert(changeLogs).values({
+    await getDb().insert(changeLogs).values({
       entityType: 'task',
       entityId: taskId,
       action: 'delete',

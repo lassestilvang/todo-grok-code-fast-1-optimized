@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { tasks, changeLogs } from '@/lib/db/schema';
 import { eq, and, or, like, desc } from 'drizzle-orm';
 import { z } from 'zod';
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
 
-    const newTask = await db.insert(tasks).values({
+    const newTask = await getDb().insert(tasks).values({
       ...validatedData,
       date: validatedData.date ? new Date(validatedData.date) : null,
       deadline: validatedData.deadline ? new Date(validatedData.deadline) : null,
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }).returning();
 
     // Log the change
-    await db.insert(changeLogs).values({
+    await getDb().insert(changeLogs).values({
       entityType: 'task',
       entityId: newTask[0].id,
       action: 'create',
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
