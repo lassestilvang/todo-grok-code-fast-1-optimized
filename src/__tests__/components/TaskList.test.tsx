@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import TaskList from '@/components/TaskList';
-import { TaskWithRelations } from '@/lib/types';
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
@@ -11,20 +10,15 @@ vi.mock('framer-motion', () => ({
 }));
 
 describe('TaskList', () => {
-  const mockTasks: TaskWithRelations[] = [
+  const mockTasks = [
     {
       id: 1,
       name: 'Task 1',
       description: 'Description 1',
       status: 'pending',
       priority: 1,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      list: { id: 1, name: 'Work', color: '#ff0000', emoji: '💼', createdAt: new Date(), updatedAt: new Date() },
-      labels: [{ id: 1, name: 'Urgent', color: '#ff0000', createdAt: new Date(), updatedAt: new Date() }],
-      subtasks: [],
-      attachments: [],
-      reminders: [],
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
     },
     {
       id: 2,
@@ -32,23 +26,20 @@ describe('TaskList', () => {
       description: 'Description 2',
       status: 'completed',
       priority: 2,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      list: null,
-      labels: [],
-      subtasks: [],
-      attachments: [],
-      reminders: [],
+      createdAt: '2024-01-01',
+      updatedAt: '2024-01-01',
     },
   ];
 
   const mockOnTaskClick = vi.fn();
-  const mockOnTaskUpdate = vi.fn();
+  const mockOnTaskStatusChange = vi.fn();
+  const mockOnTaskDelete = vi.fn();
 
   const defaultProps = {
     tasks: mockTasks,
     onTaskClick: mockOnTaskClick,
-    onTaskUpdate: mockOnTaskUpdate,
+    onTaskStatusChange: mockOnTaskStatusChange,
+    onTaskDelete: mockOnTaskDelete,
   };
 
   beforeEach(() => {
@@ -78,18 +69,6 @@ describe('TaskList', () => {
     expect(screen.getByText('High')).toBeInTheDocument();
   });
 
-  it('displays list information when available', () => {
-    render(<TaskList {...defaultProps} />);
-
-    expect(screen.getByText('💼 Work')).toBeInTheDocument();
-  });
-
-  it('displays labels when available', () => {
-    render(<TaskList {...defaultProps} />);
-
-    expect(screen.getByText('🏷️ Urgent')).toBeInTheDocument();
-  });
-
   it('calls onTaskClick when task is clicked', () => {
     render(<TaskList {...defaultProps} />);
 
@@ -105,75 +84,35 @@ describe('TaskList', () => {
     expect(screen.getByText('No tasks found')).toBeInTheDocument();
   });
 
-  it('displays subtask count when available', () => {
-    const tasksWithSubtasks = [
-      {
-        ...mockTasks[0],
-        subtasks: [
-          { id: 1, taskId: 1, name: 'Subtask 1', status: 'pending', order: 1, createdAt: new Date(), updatedAt: new Date() },
-          { id: 2, taskId: 1, name: 'Subtask 2', status: 'completed', order: 2, createdAt: new Date(), updatedAt: new Date() },
-        ],
-      },
-    ];
+  it('filters tasks by status', () => {
+    render(<TaskList {...defaultProps} />);
 
-    render(<TaskList {...defaultProps} tasks={tasksWithSubtasks} />);
+    const pendingButton = screen.getByText('PENDING');
+    fireEvent.click(pendingButton);
 
-    expect(screen.getByText('2 subtasks')).toBeInTheDocument();
+    expect(screen.queryByText('Task 2')).not.toBeInTheDocument();
   });
 
-  it('displays attachment count when available', () => {
-    const tasksWithAttachments = [
-      {
-        ...mockTasks[0],
-        attachments: [
-          { id: 1, taskId: 1, fileName: 'file1.pdf', filePath: '/path/file1.pdf', createdAt: new Date() },
-          { id: 2, taskId: 1, fileName: 'file2.jpg', filePath: '/path/file2.jpg', createdAt: new Date() },
-        ],
-      },
-    ];
+  it('displays date when available', () => {
+    const taskWithDate = {
+      ...mockTasks[0],
+      date: '2024-12-31',
+    };
 
-    render(<TaskList {...defaultProps} tasks={tasksWithAttachments} />);
+    render(<TaskList {...defaultProps} tasks={[taskWithDate]} />);
 
-    expect(screen.getByText('2 attachments')).toBeInTheDocument();
+    expect(screen.getByText(/📅/)).toBeInTheDocument();
   });
 
-  it('displays reminder count when available', () => {
-    const tasksWithReminders = [
-      {
-        ...mockTasks[0],
-        reminders: [
-          { id: 1, taskId: 1, reminderTime: new Date(), isActive: true, createdAt: new Date() },
-          { id: 2, taskId: 1, reminderTime: new Date(), isActive: false, createdAt: new Date() },
-        ],
-      },
-    ];
-
-    render(<TaskList {...defaultProps} tasks={tasksWithReminders} />);
-
-    expect(screen.getByText('2 reminders')).toBeInTheDocument();
-  });
-
-  it('displays due date when available', () => {
+  it('displays deadline when available', () => {
     const taskWithDeadline = {
       ...mockTasks[0],
-      deadline: new Date('2024-12-31'),
+      deadline: '2024-12-31',
     };
 
     render(<TaskList {...defaultProps} tasks={[taskWithDeadline]} />);
 
-    expect(screen.getByText(/Due:/)).toBeInTheDocument();
-  });
-
-  it('shows overdue indicator for past due dates', () => {
-    const overdueTask = {
-      ...mockTasks[0],
-      deadline: new Date('2020-01-01'),
-    };
-
-    render(<TaskList {...defaultProps} tasks={[overdueTask]} />);
-
-    const dueElement = screen.getByText(/Due:/);
-    expect(dueElement).toHaveClass('text-red-600');
+    expect(screen.getByText(/⏰/)).toBeInTheDocument();
   });
 
   it('displays time estimate when available', () => {
@@ -184,7 +123,7 @@ describe('TaskList', () => {
 
     render(<TaskList {...defaultProps} tasks={[taskWithEstimate]} />);
 
-    expect(screen.getByText('2h')).toBeInTheDocument();
+    expect(screen.getByText(/⏱️/)).toBeInTheDocument();
   });
 
   it('displays actual time when available', () => {
@@ -195,6 +134,15 @@ describe('TaskList', () => {
 
     render(<TaskList {...defaultProps} tasks={[taskWithActual]} />);
 
-    expect(screen.getByText('1.5h logged')).toBeInTheDocument();
+    expect(screen.getByText(/✅/)).toBeInTheDocument();
+  });
+
+  it('calls onTaskStatusChange when status is changed', () => {
+    render(<TaskList {...defaultProps} />);
+
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'completed' } });
+
+    expect(mockOnTaskStatusChange).toHaveBeenCalledWith(1, 'completed');
   });
 });

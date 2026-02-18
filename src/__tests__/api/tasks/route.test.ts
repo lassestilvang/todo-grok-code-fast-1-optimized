@@ -12,11 +12,15 @@ vi.mock('next/server', () => ({
   },
 }));
 
+// Create shared mock functions
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
+
 // Mock the database
 vi.mock('@/lib/db', () => ({
   getDb: () => ({
-    select: vi.fn(),
-    insert: vi.fn(),
+    select: mockSelect,
+    insert: mockInsert,
   }),
 }));
 
@@ -41,6 +45,23 @@ describe('/api/tasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mock implementations
+    mockSelect.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              offset: vi.fn().mockResolvedValue([]),
+            }),
+          }),
+        }),
+      }),
+    });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([]),
+      }),
+    });
   });
 
   describe('GET /api/tasks', () => {
@@ -50,7 +71,7 @@ describe('/api/tasks', () => {
         { id: 2, name: 'Another Task', status: 'completed' },
       ];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
@@ -61,9 +82,6 @@ describe('/api/tasks', () => {
           }),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
       const response = await GET(request as any);
@@ -75,7 +93,7 @@ describe('/api/tasks', () => {
     it('should filter tasks by status', async () => {
       const mockTasks = [{ id: 1, name: 'Pending Task', status: 'pending' }];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
@@ -86,8 +104,6 @@ describe('/api/tasks', () => {
           }),
         }),
       });
-
-      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?status=pending');
       const response = await GET(request);
@@ -98,7 +114,7 @@ describe('/api/tasks', () => {
     it('should filter tasks by listId', async () => {
       const mockTasks = [{ id: 1, name: 'List Task', listId: 1 }];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
@@ -109,8 +125,6 @@ describe('/api/tasks', () => {
           }),
         }),
       });
-
-      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?listId=1');
       const response = await GET(request as any);
@@ -122,7 +136,7 @@ describe('/api/tasks', () => {
     it('should search tasks by name and description', async () => {
       const mockTasks = [{ id: 1, name: 'Search Result', description: 'Found' }];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
@@ -134,8 +148,6 @@ describe('/api/tasks', () => {
         }),
       });
 
-      getDb().select = mockSelect;
-
       const request = mockRequest('http://localhost:3000/api/tasks?search=Search');
       const response = await GET(request);
 
@@ -143,7 +155,7 @@ describe('/api/tasks', () => {
     });
 
     it('should handle database errors', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockReturnValue({
@@ -154,8 +166,6 @@ describe('/api/tasks', () => {
           }),
         }),
       });
-
-      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
       const response = await GET(request as any);
@@ -174,13 +184,12 @@ describe('/api/tasks', () => {
         status: 'pending',
       };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      const createdTask = { id: 1, ...taskData };
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([{ id: 1, ...taskData }]),
+          returning: vi.fn().mockResolvedValue([createdTask]),
         }),
       });
-
-      getDb().insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(taskData);
@@ -210,14 +219,11 @@ describe('/api/tasks', () => {
     it('should handle database errors during creation', async () => {
       const taskData = { name: 'Test Task' };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockRejectedValue(new Error('Database error')),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(taskData);

@@ -9,10 +9,10 @@ vi.mock('drizzle-orm', () => ({
 
 // Mock the database
 vi.mock('@/lib/db', () => ({
-  db: {
+  getDb: () => ({
     select: vi.fn(),
     insert: vi.fn(),
-  },
+  }),
 }));
 
 describe('/api/tasks/[id]/subtasks', () => {
@@ -47,8 +47,8 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
-      db.select = mockSelect;
+      const { getDb } = await import('@/lib/db');
+      getDb().select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -72,7 +72,8 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
-      db.select = mockSelect;
+      const { getDb } = await import('@/lib/db');
+      getDb().select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -105,7 +106,8 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
-      db.insert = mockInsert;
+      const { getDb } = await import('@/lib/db');
+      getDb().insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(subtaskData);
@@ -153,7 +155,8 @@ describe('/api/tasks/[id]/subtasks', () => {
         }),
       });
 
-      db.insert = mockInsert;
+      const { getDb } = await import('@/lib/db');
+      getDb().insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(subtaskData);

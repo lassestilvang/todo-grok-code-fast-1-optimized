@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/tasks/[id]/reminders/route';
-import { db } from '@/lib/db';
+
+// Create shared mock functions
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
 
 // Mock the database
 vi.mock('@/lib/db', () => ({
-  db: {
-    select: vi.fn(),
-    insert: vi.fn(),
-  },
+  getDb: () => ({
+    select: mockSelect,
+    insert: mockInsert,
+  }),
 }));
 
 // Mock drizzle-orm functions
@@ -27,6 +30,16 @@ describe('/api/tasks/[id]/reminders', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSelect.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([]),
+      }),
+    });
   });
 
   describe('GET /api/tasks/[id]/reminders', () => {
@@ -36,13 +49,11 @@ describe('/api/tasks/[id]/reminders', () => {
         { id: 2, taskId: 1, reminderTime: new Date(), message: 'Another reminder' },
       ];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue(mockReminders),
         }),
       });
-
-      db.select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -61,13 +72,11 @@ describe('/api/tasks/[id]/reminders', () => {
     });
 
     it('should handle database errors', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockRejectedValue(new Error('Database error')),
         }),
       });
-
-      db.select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -92,13 +101,11 @@ describe('/api/tasks/[id]/reminders', () => {
         createdAt: new Date(),
       };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([mockReminder]),
         }),
       });
-
-      db.insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(reminderData);
@@ -140,13 +147,11 @@ describe('/api/tasks/[id]/reminders', () => {
     it('should handle database errors during creation', async () => {
       const reminderData = { reminderTime: '2024-01-01T10:00:00Z' };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockRejectedValue(new Error('Database error')),
         }),
       });
-
-      db.insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(reminderData);
