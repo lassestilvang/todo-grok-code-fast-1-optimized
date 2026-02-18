@@ -78,7 +78,7 @@ export async function PUT(
     const validatedData = updateTaskSchema.parse(body);
 
     // Get the current task for logging
-    const currentTask = await db
+    const currentTask = await getDb()
       .select()
       .from(tasks)
       .where(eq(tasks.id, taskId))
@@ -149,7 +149,7 @@ export async function DELETE(
     }
 
     // Get the current task for logging
-    const currentTask = await db
+    const currentTask = await getDb()
       .select()
       .from(tasks)
       .where(eq(tasks.id, taskId))
