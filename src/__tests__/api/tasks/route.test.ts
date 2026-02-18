@@ -14,10 +14,10 @@ vi.mock('next/server', () => ({
 
 // Mock the database
 vi.mock('@/lib/db', () => ({
-  db: {
+  getDb: () => ({
     select: vi.fn(),
     insert: vi.fn(),
-  },
+  }),
 }));
 
 // Mock drizzle-orm functions
@@ -62,8 +62,8 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
-      db.select = mockSelect;
+      const { getDb } = await import('@/lib/db');
+      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
       const response = await GET(request as any);
@@ -87,7 +87,7 @@ describe('/api/tasks', () => {
         }),
       });
 
-      db.select = mockSelect;
+      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?status=pending');
       const response = await GET(request);
@@ -110,7 +110,7 @@ describe('/api/tasks', () => {
         }),
       });
 
-      db.select = mockSelect;
+      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?listId=1');
       const response = await GET(request as any);
@@ -134,7 +134,7 @@ describe('/api/tasks', () => {
         }),
       });
 
-      db.select = mockSelect;
+      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks?search=Search');
       const response = await GET(request);
@@ -155,7 +155,7 @@ describe('/api/tasks', () => {
         }),
       });
 
-      db.select = mockSelect;
+      getDb().select = mockSelect;
 
       const request = mockRequest('http://localhost:3000/api/tasks');
       const response = await GET(request as any);
@@ -180,7 +180,7 @@ describe('/api/tasks', () => {
         }),
       });
 
-      db.insert = mockInsert;
+      getDb().insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(taskData);
@@ -216,8 +216,8 @@ describe('/api/tasks', () => {
         }),
       });
 
-      const { db } = await import('@/lib/db');
-      db.insert = mockInsert;
+      const { getDb } = await import('@/lib/db');
+      getDb().insert = mockInsert;
 
       const request = mockRequest('http://localhost:3000/api/tasks', 'POST');
       request.json.mockResolvedValue(taskData);
