@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    const subtaskList = await db
+    const subtaskList = await getDb()
       .select()
       .from(subtasks)
       .where(eq(subtasks.taskId, taskId))

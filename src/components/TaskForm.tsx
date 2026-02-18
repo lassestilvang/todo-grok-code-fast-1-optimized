@@ -35,8 +35,8 @@ interface TaskFormProps {
     listId?: number;
     labels?: Label[];
   };
-  lists: List[];
-  labels: Label[];
+  lists?: List[];
+  labels?: Label[];
   onSubmit: (data: TaskFormData) => void;
   onCancel: () => void;
 }
