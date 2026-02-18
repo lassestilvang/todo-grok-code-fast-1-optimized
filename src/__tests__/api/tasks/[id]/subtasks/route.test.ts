@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/tasks/[id]/subtasks/route';
 
+// Create shared mock functions
+const mockSelect = vi.fn();
+const mockInsert = vi.fn();
+
 // Mock drizzle-orm functions
 vi.mock('drizzle-orm', () => ({
   eq: vi.fn((field, value) => ({ field, value })),
@@ -10,8 +14,8 @@ vi.mock('drizzle-orm', () => ({
 // Mock the database
 vi.mock('@/lib/db', () => ({
   getDb: () => ({
-    select: vi.fn(),
-    insert: vi.fn(),
+    select: mockSelect,
+    insert: mockInsert,
   }),
 }));
 
@@ -30,6 +34,18 @@ describe('/api/tasks/[id]/subtasks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSelect.mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    });
+    mockInsert.mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([]),
+      }),
+    });
   });
 
   describe('GET /api/tasks/[id]/subtasks', () => {
@@ -39,16 +55,13 @@ describe('/api/tasks/[id]/subtasks', () => {
         { id: 2, taskId: 1, name: 'Subtask 2', status: 'completed', order: 2 },
       ];
 
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             orderBy: vi.fn().mockResolvedValue(mockSubtasks),
           }),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -66,14 +79,11 @@ describe('/api/tasks/[id]/subtasks', () => {
     });
 
     it('should handle database errors', async () => {
-      const mockSelect = vi.fn().mockReturnValue({
+      mockSelect.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockRejectedValue(new Error('Database error')),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().select = mockSelect;
 
       const request = mockRequest('GET');
       const response = await GET(request as any, { params: mockParams });
@@ -100,14 +110,11 @@ describe('/api/tasks/[id]/subtasks', () => {
         updatedAt: new Date(),
       };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([mockSubtask]),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(subtaskData);
@@ -149,14 +156,11 @@ describe('/api/tasks/[id]/subtasks', () => {
     it('should handle database errors during creation', async () => {
       const subtaskData = { name: 'Test Subtask' };
 
-      const mockInsert = vi.fn().mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockRejectedValue(new Error('Database error')),
         }),
       });
-
-      const { getDb } = await import('@/lib/db');
-      getDb().insert = mockInsert;
 
       const request = mockRequest('POST');
       request.json.mockResolvedValue(subtaskData);
