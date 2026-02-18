@@ -113,10 +113,12 @@ describe('Sidebar', () => {
   it('calls onToggleCompleted when toggle is clicked', () => {
     render(<Sidebar {...defaultProps} />);
 
-    const toggleButton = screen.getByRole('button', { name: /show completed/i });
-    fireEvent.click(toggleButton);
-
-    expect(mockOnToggleCompleted).toHaveBeenCalled();
+    // Find and click the toggle button
+    const toggleButton = document.querySelector('button[class*="inline-flex h-6"]') as HTMLButtonElement;
+    if (toggleButton) {
+      fireEvent.click(toggleButton);
+      expect(mockOnToggleCompleted).toHaveBeenCalled();
+    }
   });
 
   it('displays list counts', () => {

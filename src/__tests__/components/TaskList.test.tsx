@@ -140,8 +140,9 @@ describe('TaskList', () => {
   it('calls onTaskStatusChange when status is changed', () => {
     render(<TaskList {...defaultProps} />);
 
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'completed' } });
+    // Find the select element within the first task
+    const selectElements = screen.getAllByRole('combobox');
+    fireEvent.change(selectElements[0], { target: { value: 'completed' } });
 
     expect(mockOnTaskStatusChange).toHaveBeenCalledWith(1, 'completed');
   });
