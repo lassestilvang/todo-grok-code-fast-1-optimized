@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { tasks, changeLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -35,7 +35,7 @@ export async function GET(
       );
     }
 
-    const task = await db
+    const task = await getDb()
       .select()
       .from(tasks)
       .where(eq(tasks.id, taskId))
@@ -93,7 +93,7 @@ export async function PUT(
 
     const now = new Date();
 
-    const updatedTask = await db
+    const updatedTask = await getDb()
       .update(tasks)
       .set({
         ...validatedData,
@@ -162,7 +162,7 @@ export async function DELETE(
       );
     }
 
-    await db.delete(tasks).where(eq(tasks.id, taskId));
+    await getDb().delete(tasks).where(eq(tasks.id, taskId));
 
     // Log the change
     await db.insert(changeLogs).values({
