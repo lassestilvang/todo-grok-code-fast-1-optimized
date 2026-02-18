@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TaskList from '@/components/TaskList';
 import TaskDetail from '@/components/TaskDetail';
 import TaskForm from '@/components/TaskForm';
-import Sidebar from '@/components/Sidebar';
 
 interface Task {
   id: number;
@@ -43,35 +42,30 @@ interface Reminder {
   isActive: boolean;
 }
 
+interface TaskFormData {
+  name: string;
+  description?: string;
+  date?: string;
+  deadline?: string;
+  priority?: number;
+  status?: string;
+  estimateMinutes?: number;
+  listId?: number;
+  labelIds?: number[];
+  recurringType?: string;
+  recurringInterval?: number;
+  recurringEndDate?: string;
+}
+
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentTimerSeconds, setCurrentTimerSeconds] = useState(0);
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  useEffect(() => {
-    if (isTimerRunning) {
-      const interval = setInterval(() => {
-        setCurrentTimerSeconds(prev => prev + 1);
-      }, 1000);
-      setTimerInterval(interval);
-      return () => clearInterval(interval);
-    } else {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        setTimerInterval(null);
-      }
-    }
-  }, [isTimerRunning]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchTasks = async () => {
     try {
@@ -84,6 +78,28 @@ export default function Home() {
       console.error('Error fetching tasks:', error);
     }
   };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerIntervalRef.current = setInterval(() => {
+        setCurrentTimerSeconds(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isTimerRunning]);
 
   const fetchTaskDetails = async (taskId: number) => {
     try {
@@ -170,7 +186,7 @@ export default function Home() {
     }
   };
 
-  const handleTaskCreate = async (data: any) => {
+  const handleTaskCreate = async (data: TaskFormData) => {
     try {
       const response = await fetch('/api/tasks', {
         method: 'POST',
@@ -229,94 +245,20 @@ export default function Home() {
     }
   };
 
-  const handleStartTimer = (taskId: number) => {
+  const handleStartTimer = () => {
     setIsTimerRunning(true);
     setCurrentTimerSeconds(0);
   };
 
-  const handleStopTimer = (taskId: number) => {
+  const handleStopTimer = () => {
     setIsTimerRunning(false);
     // Add the time to actual minutes
     if (selectedTask) {
       const additionalMinutes = Math.floor(currentTimerSeconds / 60);
       const newActualMinutes = (selectedTask.actualMinutes || 0) + additionalMinutes;
-      handleTaskUpdate(taskId, { actualMinutes: newActualMinutes });
+      handleTaskUpdate(selectedTask.id, { actualMinutes: newActualMinutes });
     }
     setCurrentTimerSeconds(0);
-  };
-
-  const getFilteredTasks = () => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-
-    return tasks.filter(task => {
-      // Filter by completed status
-      if (!showCompleted && task.status === 'completed') {
-        return false;
-      }
-
-      // Filter by view
-      if (!task.date) {
-        return currentView === 'all';
-      }
-
-      const taskDate = new Date(task.date);
-
-      switch (currentView) {
-        case 'today':
-          return taskDate.toDateString() === today.toDateString();
-        case 'next7days':
-          return taskDate >= today && taskDate <= nextWeek;
-        case 'upcoming':
-          return taskDate > nextWeek;
-        case 'all':
-          return true;
-        default:
-          return true;
-      }
-    });
-  };
-
-  const getViewCounts = () => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-
-    const counts = {
-      today: 0,
-      next7days: 0,
-      upcoming: 0,
-      all: 0,
-    };
-
-    tasks.forEach(task => {
-      if (task.status === 'completed' && !showCompleted) {
-        return;
-      }
-
-      counts.all++;
-
-      if (!task.date) {
-        return;
-      }
-
-      const taskDate = new Date(task.date);
-
-      if (taskDate.toDateString() === today.toDateString()) {
-        counts.today++;
-      }
-      if (taskDate >= today && taskDate <= nextWeek) {
-        counts.next7days++;
-      }
-      if (taskDate > nextWeek) {
-        counts.upcoming++;
-      }
-    });
-
-    return counts;
   };
 
   return (

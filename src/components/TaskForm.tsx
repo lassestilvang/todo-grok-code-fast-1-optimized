@@ -3,6 +3,21 @@
 import { useState, useEffect } from 'react';
 import { List, Label, Priority, TaskStatus, RecurringType } from '@/lib/types';
 
+interface TaskFormData {
+  name: string;
+  description?: string;
+  date?: string;
+  deadline?: string;
+  priority?: number;
+  status?: string;
+  estimateMinutes?: number;
+  listId?: number;
+  labelIds?: number[];
+  recurringType?: string;
+  recurringInterval?: number;
+  recurringEndDate?: string;
+}
+
 interface TaskFormProps {
   task?: {
     id: number;
@@ -22,9 +37,8 @@ interface TaskFormProps {
   };
   lists: List[];
   labels: Label[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TaskFormData) => void;
   onCancel: () => void;
-  existingTasks?: any[]; // For smart suggestions
 }
 
 export default function TaskForm({ task, lists = [], labels = [], onSubmit, onCancel }: TaskFormProps) {
@@ -45,6 +59,7 @@ export default function TaskForm({ task, lists = [], labels = [], onSubmit, onCa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (task) {
       setFormData({

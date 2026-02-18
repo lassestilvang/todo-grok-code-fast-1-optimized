@@ -62,7 +62,7 @@ export function parseNaturalLanguage(input: string): ParsedTaskData {
   return result;
 }
 
-export function generateSmartSuggestions(parsedData: ParsedTaskData, existingTasks: any[]): string[] {
+export function generateSmartSuggestions(parsedData: ParsedTaskData, existingTasks: ParsedTaskData[]): string[] {
   const suggestions: string[] = [];
 
   // Suggest based on time of day

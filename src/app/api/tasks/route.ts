@@ -18,7 +18,6 @@ const createTaskSchema = z.object({
   recurringEndDate: z.string().optional(),
 });
 
-const updateTaskSchema = createTaskSchema.partial();
 
 // GET /api/tasks - List tasks with optional filtering
 export async function GET(request: NextRequest) {

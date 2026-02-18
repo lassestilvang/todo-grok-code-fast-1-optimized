@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { subtasks, changeLogs } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 const createSubtaskSchema = z.object({
@@ -10,12 +10,6 @@ const createSubtaskSchema = z.object({
   order: z.number().optional(),
 });
 
-const updateSubtaskSchema = z.object({
-  name: z.string().min(1, 'Name is required').optional(),
-  description: z.string().optional(),
-  status: z.enum(['pending', 'completed']).optional(),
-  order: z.number().optional(),
-});
 
 // GET /api/tasks/[id]/subtasks - Get subtasks for a task
 export async function GET(

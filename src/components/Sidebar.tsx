@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { List, Label, Task } from '@/lib/types';
 
 interface SidebarProps {
@@ -30,16 +30,13 @@ export default function Sidebar({
   onLabelSelect,
   onToggleCompleted,
 }: SidebarProps) {
-  const [overdueCount, setOverdueCount] = useState(0);
-
-  useEffect(() => {
+  const overdueCount = useMemo(() => {
     const now = new Date();
-    const overdueTasks = tasks.filter(task => {
+    return tasks.filter(task => {
       if (task.status === 'completed') return false;
       if (!task.deadline) return false;
       return new Date(task.deadline) < now;
-    });
-    setOverdueCount(overdueTasks.length);
+    }).length;
   }, [tasks]);
 
   const getViewCounts = () => {
