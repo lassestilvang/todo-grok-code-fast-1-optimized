@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { reminders, changeLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -25,7 +25,7 @@ export async function GET(
       );
     }
 
-    const reminderList = await db
+    const reminderList = await getDb()
       .select()
       .from(reminders)
       .where(eq(reminders.taskId, taskId));
@@ -61,7 +61,7 @@ export async function POST(
 
     const now = new Date();
 
-    const newReminder = await db.insert(reminders).values({
+    const newReminder = await getDb().insert(reminders).values({
       taskId,
       reminderTime: new Date(validatedData.reminderTime),
       message: validatedData.message,
@@ -69,7 +69,7 @@ export async function POST(
     }).returning();
 
     // Log the change
-    await db.insert(changeLogs).values({
+    await getDb().insert(changeLogs).values({
       entityType: 'reminder',
       entityId: newReminder[0].id,
       action: 'create',
