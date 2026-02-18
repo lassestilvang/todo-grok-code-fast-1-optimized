@@ -27,4 +27,5 @@ export const getDb = () => {
 };
 
 // For backward compatibility, export db but it will throw in tests
-export { db };
+// Using non-null assertion since db is initialized when not in test env
+export { db as db };
